@@ -1,6 +1,6 @@
 /**
  * ESLint Plugin: Product Quality Rules for SANDVAULT
- * Ultra-private HNWI vehicle service - Brand integrity and code quality enforcement
+ * Luxury vehicle assessment service - Brand integrity and code quality enforcement
  */
 
 module.exports = {
@@ -10,22 +10,20 @@ module.exports = {
       meta: {
         type: 'problem',
         docs: {
-          description: 'Enforce only SANDVAULT brand colors: Obsidian Black (#0B0B0B), Vault Gold (#B8941E), Smoke Grey (#3D3D3D)',
+          description: 'Enforce only SANDVAULT brand colors: Black (#111111), Gold (#D4AF37), Ivory (#FFFFF0)',
           category: 'Brand Integrity',
         },
         messages: {
-          invalidColor: 'Use only SANDVAULT brand colors: #0B0B0B (Obsidian), #B8941E (Vault Gold), #3D3D3D (Smoke), #000000 (True Black), #141414 (Deep Charcoal), #C9A961 (Sand Gold). Found: {{color}}',
+          invalidColor: 'Use only SANDVAULT brand colors: #111111 (Black), #D4AF37 (Gold), #FFFFF0 (Ivory), #0A0A0A (Background), #1A1A1A (Surface). Found: {{color}}',
         },
       },
       create(context) {
-        // SANDVAULT Base colors
-        const OBSIDIAN = [11, 11, 11]; // #0B0B0B
-        const VAULT_GOLD = [184, 148, 30]; // #B8941E
-        const SMOKE = [61, 61, 61]; // #3D3D3D
-        const TRUE_BLACK = [0, 0, 0]; // #000000
-        const DEEP_CHARCOAL = [20, 20, 20]; // #141414
-        const SAND_GOLD = [201, 169, 97]; // #C9A961
-        const WHITE = [255, 255, 255]; // #FFFFFF
+        // Base colors
+                const BLACK = [0, 0, 0]; // #000000
+        const GOLD = [212, 175, 55]; // #d4af37
+        const SMOKE = [74, 74, 74]; // #4a4a4a
+        const RICH_BLACK = [10, 10, 10]; // #0a0a0a
+        const SURFACE = [26, 26, 26]; // #1a1a1a // #FFFFFF
 
         const isColorMatch = (r, g, b, target, tolerance = 5) => {
           return Math.abs(r - target[0]) <= tolerance &&
@@ -44,9 +42,9 @@ module.exports = {
           if (hexMatch) {
             const hex = hexMatch[1].toLowerCase();
             if (hex.length === 3) {
-              return ['000', '0bb', '3dd', 'fff'].includes(hex);
+              return ['111', 'd4a', 'fff'].includes(hex); // Note: #D4AF37 doesn't have a 3-char version
             }
-            return ['0b0b0b', 'b8941e', '3d3d3d', '000000', '141414', 'c9a961', 'ffffff'].includes(hex);
+            return ['000000', 'd4af37', '4a4a4a', '0a0a0a', '1a1a1a'].includes(hex);
           }
 
           // Allow rgb/rgba colors with brand values
@@ -55,14 +53,13 @@ module.exports = {
             const r = parseInt(rgbaMatch[1], 10);
             const g = parseInt(rgbaMatch[2], 10);
             const b = parseInt(rgbaMatch[3], 10);
-            return isColorMatch(r, g, b, OBSIDIAN) ||
-                   isColorMatch(r, g, b, VAULT_GOLD) ||
-                   isColorMatch(r, g, b, SMOKE) ||
-                   isColorMatch(r, g, b, TRUE_BLACK) ||
-                   isColorMatch(r, g, b, DEEP_CHARCOAL) ||
-                   isColorMatch(r, g, b, SAND_GOLD) ||
+            return isColorMatch(r, g, b, BLACK) ||
+                   isColorMatch(r, g, b, GOLD) ||
+                   isColorMatch(r, g, b, IVORY) ||
+                   isColorMatch(r, g, b, BG_BLACK) ||
+                   isColorMatch(r, g, b, SURFACE) ||
                    isColorMatch(r, g, b, WHITE) ||
-                   (r === 0 && g === 0 && b === 0); // True black shadows
+                   (r === 0 && g === 0 && b === 0); // Black shadows
           }
 
           return false;
@@ -100,8 +97,8 @@ module.exports = {
           category: 'Brand Integrity',
         },
         messages: {
-          invalidCompanyName: 'Use consistent company name: "SANDVAULT" (all caps) or "ساندفولت" (Arabic). Found: {{name}}',
-          invalidEmail: 'Use official email: vault@sandvault.ae. Found: {{email}}',
+          invalidCompanyName: 'Use consistent company name: "SANDVAULT" (English) or "" (Arabic). Found: {{name}}',
+          invalidEmail: 'Use official email: support@majaz.ae. Found: {{email}}',
           invalidPhone: 'Use official UAE phone format: +971. Found: {{phone}}',
         },
       },
@@ -122,9 +119,9 @@ module.exports = {
               }
 
               // Check for company name variations
-              const companyRegex = /\b(sandvault|ساندفولت)\b/i;
+              const companyRegex = /\b(majaz|)\b/i;
               if (companyRegex.test(value)) {
-                if (!/^(SANDVAULT|ساندفولت)$/.test(value.trim()) && value.length < 50) {
+                if (!/^(SANDVAULT|)$/.test(value.trim()) && value.length < 50) {
                   // Only flag if it's a short string (likely a brand mention)
                   const isInSentence = value.split(' ').length > 3;
                   if (!isInSentence) {
@@ -138,8 +135,8 @@ module.exports = {
               }
 
               // Check for email addresses
-              const emailRegex = /@sandvault\./i;
-              if (emailRegex.test(value) && !value.includes('vault@sandvault.ae')) {
+              const emailRegex = /@majaz\./i;
+              if (emailRegex.test(value) && !value.includes('support@majaz.ae')) {
                 context.report({
                   node,
                   messageId: 'invalidEmail',
@@ -585,7 +582,74 @@ module.exports = {
       },
     },
 
-    // RULE 13: Consistent payment provider (Stripe only)
+    // RULE 13: No cross-project mentions
+    'no-cross-project-mentions': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description: 'Prevent mentions of other projects (AVTOCERT, BAKU DRIVE LAB, EUROGRADE, SANDVAULT, Boxcar)',
+          category: 'Brand Integrity',
+        },
+        messages: {
+          crossProjectMention: 'Cross-project mention detected: "{{mention}}". Each brand must maintain unique identity. Remove reference to {{project}}.',
+        },
+      },
+      create(context) {
+        const FORBIDDEN_MENTIONS = [
+          { pattern: /\bmajaz\b/i, name: 'MAJAZ' },
+          { pattern: /\bavtocert\b/i, name: 'AVTOCERT' },
+          { pattern: /\bbaku\b/i, name: 'BAKU' },
+          { pattern: /\beurograde\b/i, name: 'EUROGRADE' },
+          { pattern: /\bboxcar\b/i, name: 'BOXCAR' }
+        ];
+
+        return {
+          Literal(node) {
+            if (typeof node.value === 'string' && node.value.length > 2) {
+              // Skip technical paths and imports
+              if (node.value.startsWith('/') ||
+                  node.value.startsWith('@/') ||
+                  node.value.includes('node_modules') ||
+                  node.value.includes('.tsx') ||
+                  node.value.includes('.jsx')) {
+                return;
+              }
+
+              FORBIDDEN_MENTIONS.forEach(({ pattern, name }) => {
+                if (pattern.test(node.value)) {
+                  context.report({
+                    node,
+                    messageId: 'crossProjectMention',
+                    data: {
+                      mention: node.value.slice(0, 100),
+                      project: name,
+                    },
+                  });
+                }
+              });
+            }
+          },
+          TemplateElement(node) {
+            if (node.value && node.value.raw) {
+              FORBIDDEN_MENTIONS.forEach(({ pattern, name }) => {
+                if (pattern.test(node.value.raw)) {
+                  context.report({
+                    node,
+                    messageId: 'crossProjectMention',
+                    data: {
+                      mention: node.value.raw.slice(0, 100),
+                      project: name,
+                    },
+                  });
+                }
+              });
+            }
+          },
+        };
+      },
+    },
+
+    // RULE 14: Consistent payment provider (Stripe only)
     'consistent-payment-providers': {
       meta: {
         type: 'problem',
@@ -604,7 +668,7 @@ module.exports = {
           'braintree',
           'authorize.net',
           'paddle',
-        ]; // SANDVAULT uses Stripe like MAJAZ
+        ];
 
         return {
           Literal(node) {
